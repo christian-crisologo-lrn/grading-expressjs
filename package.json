@@ -1,0 +1,23 @@
+{
+  "name": "expressjs",
+  "version": "1.0.0",
+  "description": "Simple Express.js application with plain JavaScript and HTML",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-handlebars": "^8.0.3",
+    "hbs": "^4.2.0",
+    "learnosity-sdk-nodejs": "github:Learnosity/learnosity-sdk-nodejs"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
