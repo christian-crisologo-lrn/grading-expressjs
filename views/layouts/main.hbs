@@ -1,19 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Learnosity Grading Demo</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Custom styles -->
-  <link rel="stylesheet" href="/css/style.css">
-  <!-- Additional scripts can be included per page using the scripts block -->
-  {{{scripts}}}
-</head>
-<body class="bg-gray-100 min-h-screen">
-  <div class="container mx-auto px-4 py-8">
-    {{{body}}}
-  </div>
+{{> header title="Learnosity Grading Demo"}}
+<body class="bg-gray-100 min-h-screen py-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">Learnosity Grading</h1>
+        ssss
+        {{> panel 
+            headerId="config-header" 
+            contentId="config-content" 
+            title="Configuration" 
+            contentPartial="config-form" 
+            initialState="visible" 
+            marginBottom=true
+        }}
+        
+        {{> notification}}
+        
+        <div id="manual-grading" class="max-w-4xl mx-auto mb-8">
+            {{> panel 
+                headerId="attach-header" 
+                contentId="attach-content" 
+                title="Attach Items" 
+                contentPartial="attach-form" 
+                initialState="visible" 
+                marginBottom=true
+            }}
+            
+            {{> panel 
+                headerId="items-header" 
+                contentId="inline-items-wrapper" 
+                title="Grading Items" 
+                contentPartial="grading-items" 
+                initialState="visible"
+            }}
+        </div>
+        
+        {{> panel 
+            headerId="help-header" 
+            contentId="help-content" 
+            title="Help & Documentation" 
+            contentPartial="help-content" 
+            initialState="hidden" 
+            marginBottom=true
+        }}
+    </div>
 </body>
 </html>

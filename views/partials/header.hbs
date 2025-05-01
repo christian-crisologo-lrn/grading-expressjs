@@ -1,0 +1,26 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    {{{scripts}}}
+    <script id="server-config" type="application/json">{{{config}}}</script>
+    <style>
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .toggle-content {
+            transition: max-height 0.3s ease-out;
+            overflow: hidden;
+        }
+        
+        .toggle-button-wrapper {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>

@@ -1,0 +1,9 @@
+<div class="bg-white rounded-lg shadow-lg p-6 {{#if marginBottom}}mb-8{{/if}}">
+    <div class="panel-header" id="{{headerId}}">
+        <h2 class="text-xl font-semibold text-gray-700">{{title}}</h2>
+        <!-- Toggle button will be added here dynamically -->
+    </div>
+    <div id="{{contentId}}" data-toggle data-toggle-header="#{{headerId}}" data-toggle-initial="{{initialState}}">
+        {{> (lookup . 'contentPartial')}}
+    </div>
+</div>

@@ -1,17 +1,42 @@
-// Default configuration
 let config = {
-    consumerKey: 'yis0TYCu7U9V4o7M',
-    consumerSecret: '74c5fd430cf1242a527f6223aebd42d30464be22',
-    sessionId: 'b70cc674-9e06-4405-b326-3de3fd9450b3',
-    userId: '5b2c168d-6873-434b-9cd4-d4cb97e287b2',
+    consumerKey: '',
+    consumerSecret: '',
+    graderId: '',
+    gradeSessionId: '',
+    studentId: '',
+    assessSessionId: '',
+    items: ''
+};
+
+// Load configuration from server if available
+window.loadServerConfig = function() {
+    const serverConfig = document.getElementById('server-config');
+    if (serverConfig && serverConfig.textContent) {
+        try {
+            const parsedConfig = JSON.parse(serverConfig.textContent);
+            config = { ...config, ...parsedConfig };
+            console.log('Loaded configuration from server:', config);
+        } catch (error) {
+            console.error('Error parsing server config:', error);
+        }
+    }
 };
 
 // Function to initialize form fields with config values
 window.initFormFields = function() {
+    // First load server config if available
+    window.loadServerConfig();
+    
+    // Then populate form fields
     document.getElementById('consumer-key').value = config.consumerKey;
     document.getElementById('consumer-secret').value = config.consumerSecret;
-    document.getElementById('user-id').value = config.userId;
-    document.getElementById('session-id').value = config.sessionId;
+    document.getElementById('grader-id').value = config.graderId;
+    document.getElementById('grade-session-id').value = config.gradeSessionId;
+    //
+    document.getElementById('items').value = config.items;
+    document.getElementById('student-id').value = config.studentId;
+    document.getElementById('assess-session-id').value = config.assessSessionId;
+    document.getElementById('grade-session-id').value = config.gradeSessionId;
 };
 
 // Function to update configuration from form inputs

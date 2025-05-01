@@ -2,6 +2,10 @@ const express = require('express');
 const Learnosity = require('learnosity-sdk-nodejs');
 const app = express();
 const path = require('path');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Parse JSON request bodies
 app.use(express.json());
@@ -15,8 +19,20 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Route for the home page
 app.get('/', (req, res) => {
+  // Pass environment variables to the client
+  const clientConfig = {
+    consumerKey: process.env.LEARNOSITY_CONSUMER_KEY,
+    consumerSecret: process.env.LEARNOSITY_CONSUMER_SECRET,
+    graderId: process.env.LEARNOSITY_GRADER_ID,
+    gradeSessionId: process.env.LEARNOSITY_GRADE_SESSION_ID,
+    items: (process.env.LEARNOSITY_ITEMS || '').split(','),
+    studentId: process.env.LEARNOSITY_STUDENT_ID,
+    assessSessionId: process.env.LEARNOSITY_ASSESS_SESSION_ID,
+  };
+
   res.render('index', {
-    scripts: '<script src="/js/global.js"></script><script src="/js/learnosity-grading.js"></script>'
+    scripts: '<script src="/js/global.js"></script><script src="/js/learnosity-grading.js"></script>',
+    config: JSON.stringify(clientConfig)
   });
 });
 
@@ -35,8 +51,7 @@ app.post('/api/init', (req, res) => {
       name: "Demo",
       config: {
         regions: "main",
-      },
-      items: items || ["MANGA-DEMO-1","MANGA-DEMO-2","MANGA-DEMO-4","MANGA-DEMO-5"]
+      }
     };
     
     // Instantiate the SDK
