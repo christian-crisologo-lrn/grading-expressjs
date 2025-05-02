@@ -1,4 +1,4 @@
-let config = {
+window.gradingConfig = {
     consumerKey: '',
     consumerSecret: '',
     graderId: '',
@@ -10,22 +10,30 @@ let config = {
 
 // Load configuration from server if available
 window.loadServerConfig = function() {
+    let config = window.gradingConfig;
+
     const serverConfig = document.getElementById('server-config');
     if (serverConfig && serverConfig.textContent) {
         try {
             const parsedConfig = JSON.parse(serverConfig.textContent);
+
             config = { ...config, ...parsedConfig };
+
             console.log('Loaded configuration from server:', config);
         } catch (error) {
             console.error('Error parsing server config:', error);
         }
     }
+
+    window.gradingConfig = config;
 };
 
 // Function to initialize form fields with config values
 window.initFormFields = function() {
     // First load server config if available
     window.loadServerConfig();
+
+    const config = window.gradingConfig;
     
     // Then populate form fields
     document.getElementById('consumer-key').value = config.consumerKey;
@@ -36,7 +44,6 @@ window.initFormFields = function() {
     document.getElementById('items').value = config.items;
     document.getElementById('student-id').value = config.studentId;
     document.getElementById('assess-session-id').value = config.assessSessionId;
-    document.getElementById('grade-session-id').value = config.gradeSessionId;
 };
 
 // Function to update configuration from form inputs
@@ -44,23 +51,16 @@ window.updateConfig = function() {
     config = {
         consumerKey: document.getElementById('consumer-key').value,
         consumerSecret: document.getElementById('consumer-secret').value,
-        userId: document.getElementById('user-id').value,
-        sessionId: document.getElementById('session-id').value
+        userId: document.getElementById('grader-id').value,
+        sessionId: document.getElementById('grade-session-id').value
     };
-    console.log('Configuration updated:', config);
     return config;
 };
 
 // Expose getSignedRequest globally
 window.getSignedRequest = async function() {
     try {
-        // Show loading state
-        const initButton = document.getElementById('init-config-btn');
-        const originalText = initButton.textContent;
-        initButton.textContent = 'Loading...';
-        initButton.disabled = true;
-        initButton.classList.add('bg-gray-400');
-        initButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+        // We don't need to show loading state here as it's already shown in the button
         
         const response = await fetch('/api/init', {
             method: 'POST',
@@ -76,12 +76,6 @@ window.getSignedRequest = async function() {
             }),
         });
         
-        // Reset button state
-        initButton.textContent = originalText;
-        initButton.disabled = false;
-        initButton.classList.remove('bg-gray-400');
-        initButton.classList.add('bg-green-600', 'hover:bg-green-700');
-        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -96,18 +90,25 @@ window.getSignedRequest = async function() {
         
     } catch (error) {
         console.error('Error getting signed request:', error);
+        
         // Show error notification
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4';
-        errorDiv.innerHTML = `<strong class="font-bold">Error!</strong> <span class="block sm:inline">${error.message}</span>`;
-        
-        const configSection = document.querySelector('.bg-white');
-        configSection.appendChild(errorDiv);
-        
-        // Remove error after 5 seconds
-        setTimeout(() => {
-            errorDiv.remove();
-        }, 5000);
+        if (window.LearnosityGradingApp && window.LearnosityGradingApp.showNotification) {
+            window.LearnosityGradingApp.showNotification('Error: ' + error.message, 'error');
+        } else {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4';
+            errorDiv.innerHTML = `<strong class="font-bold">Error!</strong> <span class="block sm:inline">${error.message}</span>`;
+            
+            const configSection = document.querySelector('.bg-white');
+            if (configSection) {
+                configSection.appendChild(errorDiv);
+                
+                // Remove error after 5 seconds
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 5000);
+            }
+        }
         
         throw error;
     }

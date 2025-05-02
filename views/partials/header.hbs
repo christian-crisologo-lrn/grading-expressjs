@@ -3,14 +3,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontSize: {
+                        'xs': '0.65rem',     // 25% smaller than default 0.75rem
+                        'sm': '0.75rem',     // 25% smaller than default 0.875rem
+                        'base': '0.9375rem', // 25% smaller than default 1rem
+                        'lg': '1.05rem',     // 25% smaller than default 1.125rem
+                        'xl': '1.2rem',      // 25% smaller than default 1.25rem
+                        '2xl': '1.35rem',    // 25% smaller than default 1.5rem
+                        '3xl': '1.65rem',    // 25% smaller than default 1.875rem
+                    },
+                    spacing: {
+                        '1.5': '0.375rem',   // 25% smaller than 0.5rem
+                        '3': '0.75rem',      // 25% smaller than 1rem
+                        '4.5': '1.125rem',   // 25% smaller than 1.5rem
+                        '6': '1.5rem',       // 25% smaller than 2rem
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="/js/toggle.js"></script>
     {{{scripts}}}
     <script id="server-config" type="application/json">{{{config}}}</script>
     <style>
+        body {
+            font-size: 0.9375rem; /* 25% smaller than 1rem */
+        }
+        
         .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
         }
         
         .toggle-content {
@@ -21,6 +48,49 @@
         .toggle-button-wrapper {
             display: flex;
             align-items: center;
+        }
+        
+        .toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #4B5563;
+            transition: color 0.2s;
+            padding: 3px; /* 25% smaller than 4px */
+            border-radius: 3px; /* 25% smaller than 4px */
+        }
+        
+        .toggle-btn:hover {
+            color: #1F2937;
+            background-color: #F3F4F6;
+        }
+        
+        .toggle-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 1.5px rgba(59, 130, 246, 0.5); /* 25% smaller than 2px */
+        }
+        
+        /* Adjust SVG icon sizes */
+        .toggle-btn svg {
+            height: 1.125rem; /* 25% smaller than 1.5rem (h-6) */
+            width: 1.125rem; /* 25% smaller than 1.5rem (w-6) */
+        }
+        
+        /* Adjust input fields */
+        input[type="text"], 
+        input[type="password"], 
+        input[type="email"], 
+        input[type="number"], 
+        select, 
+        textarea {
+            padding: 0.375rem 0.75rem; /* 25% smaller than 0.5rem 1rem */
+            font-size: 0.9375rem; /* 25% smaller than 1rem */
+        }
+        
+        /* Adjust buttons */
+        button {
+            padding: 0.375rem 0.75rem; /* 25% smaller than 0.5rem 1rem */
+            font-size: 0.9375rem; /* 25% smaller than 1rem */
         }
     </style>
 </head>

@@ -1,21 +1,100 @@
+const gradingApp = {
+    attachItem: async ( sessionId, userId, item, wrapper ) => {
+        const hookElement = document.createElement('DIV');
+        const payload = {
+            sessionId,
+            userId,
+            item
+        };
+    
+        wrapper.appendChild(hookElement);
+    
+        return window.gradingApp.attachItem(payload, hookElement)
+    },
+    save: async function() {
+        return await window.gradingApp.save();
+    }
+};
+
+const renderItems = async (activity, wrapper) => {
+    let ctr = 0;
+    const { items, sessionId, userId } = activity;
+
+    while( ctr < items.length ) {
+        const itemRef = items[ctr];
+
+        await gradingApp.attachItem(sessionId, userId, itemRef, wrapper)
+            .then((attachedItems) => {
+                ctr++;
+                return attachedItems;
+            }).catch( (error) => {
+                console.error(`attach item error userId : ${userId} : sessionId ${sessionId} : itemRef ${itemRef}`, error);
+                ctr++;
+            });
+    }
+
+    return true;
+}
+
 // Learnosity Grading Integration Module
 (function() {
     // UI Component Factory
     const UI = {
-        showSpinner: function(message = '') {
+        // Show spinner in a button
+        showButtonSpinner: function(buttonId, message = '') {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
             
-            const spinnerHtml = `
-                <div class="flex justify-center items-center h-40">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                    ${message ? `<span class="ml-3">${message}</span>` : ''}
-                </div>
+            // Store original text
+            button.dataset.originalText = button.textContent;
+            
+            // Show spinner in button
+            button.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-1.5 h-3 w-3 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                ${message || 'Loading...'}
             `;
-
-            document.getElementById('loader').innerHTML = spinnerHtml;
+            
+            // Disable button
+            button.disabled = true;
+            
+            // Add gray background
+            if (button.classList.contains('bg-green-600')) {
+                button.classList.remove('bg-green-600', 'hover:bg-green-700');
+                button.classList.add('bg-gray-400');
+            } else if (button.classList.contains('bg-blue-600')) {
+                button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                button.classList.add('bg-gray-400');
+            }
         },
-
-        hideSpinner: function() {
-            document.getElementById('loader').innerHTML = '';
+        
+        // Hide spinner from button
+        hideButtonSpinner: function(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            
+            // Restore original text
+            if (button.dataset.originalText) {
+                button.textContent = button.dataset.originalText;
+                delete button.dataset.originalText;
+            }
+            
+            // Enable button
+            button.disabled = false;
+            
+            // Restore original background
+            if (button.classList.contains('bg-gray-400')) {
+                button.classList.remove('bg-gray-400');
+                
+                // Determine which color to restore based on button type
+                if (buttonId === 'init-config-btn') {
+                    button.classList.add('bg-green-600', 'hover:bg-green-700');
+                } else {
+                    button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                }
+            }
         },
         
         // Create error message
@@ -50,100 +129,105 @@
                 </div>
             `;
 
+            // Create a new notification element
             const notificationElement = document.createElement('div');
             notificationElement.innerHTML = htmlString;
             
-            container.insertBefore(notificationElement, container.firstChild);
-            
-            setTimeout(() => {
-                notificationElement.remove();
-            }, 5000);
-        },
-        
-        togglePanel: function(content, toggleBtn) {
-            if (!content || !toggleBtn) return;
-            
-            const isVisible = content.style.display !== 'none';
-            
-            if (isVisible) {
-                // Hide the content
-                content.style.display = 'none';
-                // Change the icon to "show"
-                toggleBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                    </svg>
-                `;
-            } else {
-                // Show the content
-                content.style.display = 'block';
-                // Change the icon to "hide"
-                toggleBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                `;
+            if (container.firstChild) {
+                container.firstChild.remove();
             }
-        }
+            
+            // Add the new notification
+            container.appendChild(notificationElement);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                const currentNotification = container.querySelector('div');
+                if (currentNotification) {
+                    notificationElement.remove();
+                }
+            }, 2000);
+        },
+
+        initForm: function() {
+            window.loadServerConfig();
+
+            const config = window.gradingConfig;
+    
+            // Then populate form fields
+            document.getElementById('consumer-key').value = config.consumerKey;
+            document.getElementById('consumer-secret').value = config.consumerSecret;
+            document.getElementById('grader-id').value = config.graderId;
+            document.getElementById('grade-session-id').value = config.gradeSessionId;
+            //
+            document.getElementById('items').value = config.items;
+            document.getElementById('student-id').value = config.studentId;
+            document.getElementById('assess-session-id').value = config.assessSessionId;
         
+        }
     };
     
     // Learnosity Integration Module
     const LearnosityIntegration = {
-        initialized: false,
-        app: null,
-        
         // Load the Learnosity script
         loadScript: function() {
+            UI.showButtonSpinner('init-config-btn', 'Loading script...');
+            
             const script = document.createElement('script');
             script.src = 'https://grading.learnosity.com/';
             script.async = true;
-            script.onload = this.initialize.bind(this);
+            script.onload = this.loadConfig.bind(this);
             script.onerror = (e) => {
                 console.error('Script failed to load', e);
-
+                UI.hideButtonSpinner('init-config-btn');
                 UI.showError('Failed to load Learnosity Grading script.');
             };
             document.head.appendChild(script);
         },
         
         // Initialize Learnosity Grading
-        initialize: async function() {
+        loadConfig: async function() {
             // Check if the Learnosity script has loaded
             if (typeof LearnosityGrading === 'undefined') {
                 console.error('Learnosity Grading script not loaded');
+                UI.hideButtonSpinner('init-config-btn');
                 UI.showError('Learnosity Grading script failed to load.');
-                
                 return;
             }
             
             try {
+
+                initSpecificToggle('toggle-config-btn', 'config-content', false);
+                initSpecificToggle('toggle-attach-btn', 'attach-content', true);
+
+
                 // Get the signed request using the current configuration
                 const signedRequest = await window.getSignedRequest();
 
                 // Initialize the grading app
                 LearnosityGrading.init(signedRequest)
                 .then((app) => {
-                    this.app = app;
-                    window.gradingApp = app; // For backward compatibility
-                    this.initialized = true;
+                    window.gradingApp = app;
                     console.log('Learnosity Grading initialized');
                     UI.showNotification('Learnosity Grading initialized successfully!');
-
-                    UI.hideSpinner();
-
+                    UI.hideButtonSpinner('init-config-btn');
+                    
+                    // Open the attach item panel after successful initialization
+                    const attachContent = document.getElementById('attach-content');
+                    const toggleAttachBtn = document.getElementById('toggle-attach-btn');
+                    if (attachContent && toggleAttachBtn && attachContent.style.display === 'none') {
+                        togglePanel(attachContent, toggleAttachBtn);
+                    }
                 })
                 .catch((error) => {
                     console.error('Error initializing Learnosity Grading:', error);
-                    UI.EL.wrapper.innerHTML = UI.showError(`Failed to initialize Learnosity Grading: ${error.message}`);
-
-                    UI.hideSpinner();
+                    UI.showError(`Failed to initialize Learnosity Grading: ${error.message}`);
+                    UI.hideButtonSpinner('init-config-btn');
                 });
             } catch (error) {
                 console.error('Error initializing Learnosity Grading:', error);
-                UI.EL.wrapper.innerHTML = UI.showError(`Failed to initialize Learnosity Grading: ${error.message}`);
-
-                UI.hideSpinner();
+                UI.showError(`Failed to initialize Learnosity Grading: ${error.message}`);
+                UI.hideButtonSpinner('init-config-btn');
             }
         },
         
@@ -152,55 +236,37 @@
             const submitButton = document.getElementById('submit-btn');
             if (!submitButton) return;
             
-            if (!this.app) {
+            if (!window.gradingApp) {
                 console.error('Grading app not initialized');
                 UI.showNotification('Grading app not initialized. Please initialize configuration first.', 'error');
-                
                 return;
             }
             
-            // Show loading state
-            submitButton.textContent = 'Submitting...';
-            submitButton.disabled = true;
-            submitButton.classList.add('bg-gray-400');
-            submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            // Show loading state in button
+            UI.showButtonSpinner('submit-btn', 'Submitting...');
             
-            this.app.save()
+            gradingApp.save()
                 .then((response) => {
                     console.log('save response', response);
                     UI.showNotification('Grading saved successfully!');
-                    
-                    // Reset button state
-                    this._resetButtonState(submitButton);
+                    UI.hideButtonSpinner('submit-btn');
                 })
                 .catch((error) => {
                     console.error('save error', error);
                     UI.showNotification('Error saving grading: ' + error.message, 'error');
-                    
-                    // Reset button state
-                    this._resetButtonState(submitButton);
+                    UI.hideButtonSpinner('submit-btn');
                 });
-        },
-        
-        // Reset button state (private helper)
-        _resetButtonState: function(button) {
-            button.textContent = 'Submit';
-            button.disabled = false;
-            button.classList.remove('bg-gray-400');
-            button.classList.add('bg-blue-600', 'hover:bg-blue-700');
         }
     };
     
     // Event Handlers
     const EventHandlers = {
-        // Initialize configuration
-        initConfig: function() {
-            UI.showSpinner('Loading Learnosity Grading...');
+        loadConfig: function() {
             // Update the configuration with form values
             window.updateConfig();
             
             // If already initialized, we need to reinitialize
-            if (LearnosityIntegration.initialized) {
+            if (window.gradingApp) {
                 // Clear the wrapper element
                 const wrapperElement = document.getElementById('inline-items-wrapper');
                 if (wrapperElement) {
@@ -208,9 +274,11 @@
                 }
                 
                 // Reinitialize Learnosity
-                LearnosityIntegration.initialize();
+                LearnosityIntegration.loadConfig();
             } else {
                 // First time initialization
+                UI.initForm();
+                //
                 LearnosityIntegration.loadScript();
             }
         },
@@ -219,57 +287,55 @@
         submitGrading: function() {
             LearnosityIntegration.save();
         },
-        
-        // Toggle configuration panel
-        toggleConfig: function() {
-            const content = document.getElementById('config-content');
-            const toggleBtn = document.getElementById('toggle-config-btn');
-            UI.togglePanel(content, toggleBtn);
-        },
 
-         // Toggle attach item
-         toggleAttachItem: function() {
-            const content = document.getElementById('attach-item-content');
-            const toggleBtn = document.getElementById('toggle-attach-item-btn');
-            UI.togglePanel(content, toggleBtn);
+        attachIems: async function() {
+            UI.showButtonSpinner('attach-item-btn', 'Attaching...');
+
+            const itemsInput = document.getElementById('items');
+            const studentIdInput = document.getElementById('student-id');
+            const sessionIdInput = document.getElementById('assess-session-id');
+            const wrapper = document.getElementById('inline-items-wrapper');
+
+            if (!itemsInput || !studentIdInput || !sessionIdInput || !wrapper) {
+                console.error('Missing required inputs');
+                UI.showError('Missing required inputs');
+                UI.hideButtonSpinner('attach-item-btn');
+                return;
+            }
+
+            const items = itemsInput.value.split(',').map(item => item.trim());
+            const studentId = studentIdInput.value;
+            const sessionId = sessionIdInput.value;
+
+            const payload ={
+                items,
+                sessionId,
+                userId: studentId
+            };
+
+            await renderItems(payload, wrapper);
+
+            UI.hideButtonSpinner('attach-item-btn');
         }
     };
     
     // Initialize the application when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
-        // Initialize form fields with default values
-        if (typeof window.initFormFields === 'function') {
-            window.initFormFields();
-        }
-        
         // Set up event listeners
-        const initConfigButton = document.getElementById('init-config-btn');
+        const loadConfigBtn = document.getElementById('init-config-btn');
         const submitButton = document.getElementById('submit-btn');
-        const toggleConfigButton = document.getElementById('toggle-config-btn');
-        const toggleAttachItemButton = document.getElementById('toggle-attach-item-btn');
-        
-        if (initConfigButton) {
-            initConfigButton.addEventListener('click', EventHandlers.initConfig);
+        const attachItemButton = document.getElementById('attach-item-btn');
+
+        if (loadConfigBtn) {
+            loadConfigBtn.addEventListener('click', EventHandlers.loadConfig);
         }
         
         if (submitButton) {
             submitButton.addEventListener('click', EventHandlers.submitGrading);
         }
-        
-        if (toggleConfigButton) {
-            toggleConfigButton.addEventListener('click', EventHandlers.toggleConfig);
-        }
 
-        if (toggleAttachItemButton) {
-            toggleAttachItemButton.addEventListener('click', EventHandlers.toggleAttachItem);
+        if (attachItemButton) {
+            attachItemButton.addEventListener('click', EventHandlers.attachIems);
         }
     });
-    
-    // Expose public API
-    window.LearnosityGradingApp = {
-        initialize: LearnosityIntegration.initialize.bind(LearnosityIntegration),
-        save: LearnosityIntegration.save.bind(LearnosityIntegration),
-        showNotification: UI.showNotification.bind(UI),
-        toggleConfig: UI.toggleConfig.bind(UI)
-    };
 })();

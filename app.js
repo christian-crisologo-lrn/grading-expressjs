@@ -2,6 +2,7 @@ const express = require('express');
 const Learnosity = require('learnosity-sdk-nodejs');
 const app = express();
 const path = require('path');
+const { engine } = require('express-handlebars'); // ✅ use destructuring
 const dotenv = require('dotenv');
 
 // Load environment variables from .env file
@@ -13,9 +14,18 @@ app.use(express.json());
 // Serve static files from the public directory
 app.use(express.static('public'));
 
-// Set up view engine
+
+// Set up Handlebars engine
+app.engine('hbs', engine({
+  extname: '.hbs',
+  defaultLayout: 'main',
+  layoutsDir: path.join(__dirname, 'views/layouts'),
+  partialsDir: path.join(__dirname, 'views/partials'),
+}));
+
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
+
 
 // Route for the home page
 app.get('/', (req, res) => {
@@ -29,7 +39,7 @@ app.get('/', (req, res) => {
     studentId: process.env.LEARNOSITY_STUDENT_ID,
     assessSessionId: process.env.LEARNOSITY_ASSESS_SESSION_ID,
   };
-
+  
   res.render('index', {
     scripts: '<script src="/js/global.js"></script><script src="/js/learnosity-grading.js"></script>',
     config: JSON.stringify(clientConfig)
