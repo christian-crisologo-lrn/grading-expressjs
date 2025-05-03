@@ -77,8 +77,8 @@ function updateArrowDirection(toggleBtn, isOpen) {
             // Panel is open, arrow points down
             svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />';
         } else {
-            // Panel is closed, arrow points right
-            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />';
+            // Panel is closed, arrow points up (instead of right)
+            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />';
         }
     }
 }

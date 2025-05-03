@@ -12,15 +12,13 @@
         <div class="bg-white rounded-lg shadow-md p-4 mb-6">
             <div class="panel-header" id="config-header">
                 <h2 class="text-lg font-semibold text-gray-700">Configuration</h2>
-                <button id="toggle-config-btn" class="toggle-btn" data-target="#config-form-content">
+                <button id="toggle-config-btn" class="toggle-btn" data-target="#config-content">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
             </div>
-            <div id="config-form-content">
-                {{> config-form}}
-            </div>
+            {{> config-form}}
         </div>
         
         <div id="manual-grading" class="max-w-4xl mx-auto mb-4">
