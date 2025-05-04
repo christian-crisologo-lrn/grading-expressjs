@@ -1,21 +1,19 @@
 const express = require('express');
 const Learnosity = require('learnosity-sdk-nodejs');
-const app = express();
 const path = require('path');
-const { engine } = require('express-handlebars'); // ✅ use destructuring
+const { engine } = require('express-handlebars');
 const dotenv = require('dotenv');
 
-// Load environment variables from .env file
+// Load environment variables
 dotenv.config();
 
-// Parse JSON request bodies
-app.use(express.json());
+const app = express();
 
-// Serve static files from the public directory
+// Middleware setup
+app.use(express.json());
 app.use(express.static('public'));
 
-
-// Set up Handlebars engine
+// Handlebars setup
 app.engine('hbs', engine({
   extname: '.hbs',
   defaultLayout: 'main',
@@ -88,6 +86,4 @@ app.post('/api/init', (req, res) => {
 
 // Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,38 +1,24 @@
+// Core grading functionality
 const gradingApp = {
-    attachItem: async ( sessionId, userId, item, wrapper ) => {
+    attachItem: async (sessionId, userId, item, wrapper) => {
         const hookElement = document.createElement('DIV');
-        const payload = {
-            sessionId,
-            userId,
-            item
-        };
-    
         wrapper.appendChild(hookElement);
-    
-        return window.gradingApp.attachItem(payload, hookElement)
+        return window.gradingApp.attachItem({ sessionId, userId, item }, hookElement);
     },
-    save: async function() {
-        return await window.gradingApp.save();
-    }
+    save: async () => window.gradingApp.save()
 };
 
+// Render multiple items
 const renderItems = async (activity, wrapper) => {
-    let ctr = 0;
     const { items, sessionId, userId } = activity;
-
-    while( ctr < items.length ) {
-        const itemRef = items[ctr];
-
-        await gradingApp.attachItem(sessionId, userId, itemRef, wrapper)
-            .then((attachedItems) => {
-                ctr++;
-                return attachedItems;
-            }).catch( (error) => {
-                console.error(`attach item error userId : ${userId} : sessionId ${sessionId} : itemRef ${itemRef}`, error);
-                ctr++;
-            });
+    
+    for (const itemRef of items) {
+        try {
+            await gradingApp.attachItem(sessionId, userId, itemRef, wrapper);
+        } catch (error) {
+            console.error(`Error attaching item: ${userId}/${sessionId}/${itemRef}`, error);
+        }
     }
-
     return true;
 }
 
@@ -40,15 +26,12 @@ const renderItems = async (activity, wrapper) => {
 (function() {
     // UI Component Factory
     const UI = {
-        // Show spinner in a button
-        showButtonSpinner: function(buttonId, message = '') {
+        // Button state management
+        showButtonSpinner(buttonId, message = 'Loading...') {
             const button = document.getElementById(buttonId);
             if (!button) return;
             
-            // Store original text
             button.dataset.originalText = button.textContent;
-            
-            // Show spinner in button
             button.innerHTML = `
                 <svg class="animate-spin -ml-1 mr-1.5 h-3 w-3 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -75,7 +58,6 @@ const renderItems = async (activity, wrapper) => {
             const button = document.getElementById(buttonId);
             if (!button) return;
             
-            // Restore original text
             if (button.dataset.originalText) {
                 button.textContent = button.dataset.originalText;
                 delete button.dataset.originalText;
@@ -87,90 +69,84 @@ const renderItems = async (activity, wrapper) => {
             // Restore original background
             if (button.classList.contains('bg-gray-400')) {
                 button.classList.remove('bg-gray-400');
-                
-                // Determine which color to restore based on button type
-                if (buttonId === 'init-config-btn') {
-                    button.classList.add('bg-green-600', 'hover:bg-green-700');
-                } else {
-                    button.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                }
+                const isGreen = button.id === 'init-config-btn';
+                button.classList.add(
+                    isGreen ? 'bg-green-600' : 'bg-blue-600',
+                    isGreen ? 'hover:bg-green-700' : 'hover:bg-blue-700'
+                );
             }
         },
         
-        // Create error message
-        showError: function(message) {
-            const htmlString = `
+        // Notifications and errors
+        showError(message) {
+            document.getElementById('inline-items-wrapper').innerHTML = `
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
                     <strong class="font-bold">Error!</strong>
                     <span class="block sm:inline">${message}</span>
                 </div>
             `;
-
-            document.getElementById('inline-items-wrapper').innerHTML = htmlString;
         },
 
-        hideError: function() {
+        hideError() {
             document.getElementById('inline-items-wrapper').innerHTML = '';
         },
         
-        // Show notification
-        showNotification: function(message, type = 'success') {
+        showNotification(message, type = 'success') {
             const container = document.getElementById('notification');
-
             if (!container) return;
             
             const bgColor = type === 'success' 
-            ? 'bg-green-100 border-green-400 text-green-700' 
-            : 'bg-red-100 border-red-400 text-red-700';
+                ? 'bg-green-100 border-green-400 text-green-700' 
+                : 'bg-red-100 border-red-400 text-red-700';
             
-            const htmlString = `
+            const notification = document.createElement('div');
+            notification.innerHTML = `
                 <div class="${bgColor} border px-4 py-3 rounded relative mb-4">
                     <span class="block sm:inline">${message}</span>
                 </div>
             `;
-
-            // Create a new notification element
-            const notificationElement = document.createElement('div');
-            notificationElement.innerHTML = htmlString;
             
             if (container.firstChild) {
                 container.firstChild.remove();
             }
             
             // Add the new notification
-            container.appendChild(notificationElement);
+            container.appendChild(notification);
             
             // Auto-remove after 5 seconds
             setTimeout(() => {
                 const currentNotification = container.querySelector('div');
                 if (currentNotification) {
-                    notificationElement.remove();
+                    notification.remove();
                 }
             }, 2000);
         },
 
         initForm: function() {
             window.loadServerConfig();
-
             const config = window.gradingConfig;
-    
-            // Then populate form fields
-            document.getElementById('consumer-key').value = config.consumerKey;
-            document.getElementById('consumer-secret').value = config.consumerSecret;
-            document.getElementById('grader-id').value = config.graderId;
-            document.getElementById('grade-session-id').value = config.gradeSessionId;
-            //
-            document.getElementById('items').value = config.items;
-            document.getElementById('student-id').value = config.studentId;
-            document.getElementById('assess-session-id').value = config.assessSessionId;
-        
+            
+            // Populate form fields
+            const fields = {
+                'consumer-key': config.consumerKey,
+                'consumer-secret': config.consumerSecret,
+                'grader-id': config.graderId,
+                'grade-session-id': config.gradeSessionId,
+                'items': config.items,
+                'student-id': config.studentId,
+                'assess-session-id': config.assessSessionId
+            };
+            
+            Object.entries(fields).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) element.value = value;
+            });
         }
     };
     
     // Learnosity Integration Module
     const LearnosityIntegration = {
-        // Load the Learnosity script
-        loadScript: function() {
+        loadScript() {
             UI.showButtonSpinner('init-config-btn', 'Loading script...');
             
             const script = document.createElement('script');
@@ -185,9 +161,7 @@ const renderItems = async (activity, wrapper) => {
             document.head.appendChild(script);
         },
         
-        // Initialize Learnosity Grading
-        loadConfig: async function() {
-            // Check if the Learnosity script has loaded
+        async loadConfig() {
             if (typeof LearnosityGrading === 'undefined') {
                 console.error('Learnosity Grading script not loaded');
                 UI.hideButtonSpinner('init-config-btn');
@@ -196,10 +170,8 @@ const renderItems = async (activity, wrapper) => {
             }
             
             try {
-
                 initSpecificToggle('toggle-config-btn', 'config-content', false);
                 initSpecificToggle('toggle-attach-btn', 'attach-content', true);
-
 
                 // Get the signed request using the current configuration
                 const signedRequest = await window.getSignedRequest();
@@ -337,5 +309,7 @@ const renderItems = async (activity, wrapper) => {
         if (attachItemButton) {
             attachItemButton.addEventListener('click', EventHandlers.attachIems);
         }
+
+        UI.initForm();
     });
 })();
